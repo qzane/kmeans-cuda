@@ -19,13 +19,18 @@ def main(num, centers, max_range, std):
         points = np.concatenate([x,y], axis=1)
         data.append(points)
     data = np.concatenate(data, axis=0)
-    file = open('./tests/data.txt','w')
+    file = open('./tests/data_N_%d_C_%d_R_%d_S_%d.txt' % (num,centers,max_range,std),'w')
     for i in range(data.shape[0]):
         file.write(str(data[i][0]) + ', ' + str(data[i][1]) + '\n')
     file.close()
 
 if __name__ == "__main__":
     # Generate 2D points with multi-modal gaussian distribution
+    # Save a txt file to ./tests
+    # N denotes Number of data to generate
+    # C denotes Number of cluster centers
+    # R denotes center range
+    # S denotes std range
     parser = ArgumentParser()
     parser.add_argument("--num_data", type=int,dest="num", 
                         default='1e5',
