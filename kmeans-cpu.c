@@ -16,10 +16,10 @@ int K; // number of clusters
 int T; // number of iterations
 char INPUT_FILE[256]; // input file name
 
-double *POINTS; // POINTS[i*2+0]:x POINTS[i*2+1]:y
+float *POINTS; // POINTS[i*2+0]:x POINTS[i*2+1]:y
 int *CLASSES; // class for each point
 int *NUM_CLASSES; // number of points in each class
-double *CLUSTERS; // position for each cluster
+float *CLUSTERS; // position for each cluster
 
 
 void write_results(int n, int k){
@@ -34,14 +34,14 @@ void write_results(int n, int k){
     
     outputFile = fopen("Clusters.txt", "w");
     for(i=0;i<k;i++){
-        fprintf(outputFile, "%lf,%lf\n", CLUSTERS[i*2], CLUSTERS[i*2+1]);
+        fprintf(outputFile, "%f,%f\n", CLUSTERS[i*2], CLUSTERS[i*2+1]);
     }
     fclose(outputFile);    
 }
 
 void update_classes(int n, int k){ //based on CLUSTERS
     int i,j,minK;
-    double minDis, dis, disX, disY;
+    float minDis, dis, disX, disY;
     for(i=0;i<n;i++){
         disX = POINTS[i*2]-CLUSTERS[0];
         disY = POINTS[i*2+1]-CLUSTERS[1];
@@ -83,7 +83,7 @@ void update_clusters(int n, int k){ // based on CLASSES
     
 void clean_clusters(int *K){ // remove empty clusters, CLASSES are invalid after this process
     int i;
-    double tmp;
+    float tmp;
     for(i=0;i<*K;i++){
         if(NUM_CLASSES[i]==0){
             CLUSTERS[i*2] = CLUSTERS[*K * 2];
@@ -97,13 +97,13 @@ void clean_clusters(int *K){ // remove empty clusters, CLASSES are invalid after
 void init(int n, int k, char *input){
     FILE *inputFile;
     int i;
-    double x,y;
+    float x,y;
     
     // read points
-    POINTS = (double*)malloc(n * 2 * sizeof(double));
+    POINTS = (float*)malloc(n * 2 * sizeof(float));
     inputFile = fopen(input, "r");
     for(i=0;i<n;i++){
-        if(fscanf(inputFile, "%lf,%lf\n", &x, &y)==2){
+        if(fscanf(inputFile, "%f,%f\n", &x, &y)==2){
             POINTS[i*2] = x;
             POINTS[i*2+1] = y;
         }
@@ -115,7 +115,7 @@ void init(int n, int k, char *input){
     
     // clusters init
     NUM_CLASSES = (int*)malloc(k * sizeof(int));
-    CLUSTERS = (double*)malloc(k * 2 * sizeof(double));
+    CLUSTERS = (float*)malloc(k * 2 * sizeof(float));
     for(i=0;i<k;i++){
         CLUSTERS[i*2]=POINTS[i*2];
         CLUSTERS[i*2+1]=POINTS[i*2+1];
@@ -124,12 +124,12 @@ void init(int n, int k, char *input){
 
 int data_count(char *fileName){
     FILE *inputFile;
-    double x, y;
+    float x, y;
     int count=0;
     inputFile = fopen(fileName, "r");
-    while(fscanf(inputFile, "%lf,%lf\n", &x, &y)==2){
+    while(fscanf(inputFile, "%f,%f\n", &x, &y)==2){
         count++;    
-        //printf("%lf,%lf\n",tmp1,tmp2);
+        //printf("%f,%f\n",tmp1,tmp2);
     }
     fclose(inputFile);
     return count;
