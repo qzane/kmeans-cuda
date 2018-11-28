@@ -61,17 +61,18 @@ void update_classes(int n, int k){ //based on CLUSTERS
 }
     
 void update_clusters(int n, int k){ // based on CLASSES
-    int i,j,class;
+    int i;
+	int _class;
     for(i=0;i<k;i++){
         CLUSTERS[i*2]=0;
         CLUSTERS[i*2+1]=0;
         NUM_CLASSES[i]=0;
     }
     for(i=0;i<n;i++){
-        class = CLASSES[i];
-        NUM_CLASSES[class]++;
-        CLUSTERS[class*2] += POINTS[i*2];
-        CLUSTERS[class*2+1] += POINTS[i*2+1];
+        _class = CLASSES[i];
+        NUM_CLASSES[_class]++;
+        CLUSTERS[_class*2] += POINTS[i*2];
+        CLUSTERS[_class*2+1] += POINTS[i*2+1];
     }
     for(i=0;i<k;i++){
         //if(NUM_CLASSES[i]!=0){
@@ -83,7 +84,6 @@ void update_clusters(int n, int k){ // based on CLASSES
     
 void clean_clusters(int *K){ // remove empty clusters, CLASSES are invalid after this process
     int i;
-    float tmp;
     for(i=0;i<*K;i++){
         if(NUM_CLASSES[i]==0){
             CLUSTERS[i*2] = CLUSTERS[*K * 2];
