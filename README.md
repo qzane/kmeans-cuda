@@ -22,6 +22,14 @@ COMP 633 project: kmeans in cuda
 * 64-bit floating-point version of atomicAdd(), starting from cc6.0
 
 
+# interesting points
+# point 1
+./kmeans-gpu -k 10 -i ./tests/data_N_500000_C_10_R_10_S_0.txt -t 500 -g
+the Clusters.txt for gpu differ each time you run
+but remain the same when using and compile with  -arch=sm_60
+the Classes.txt are sometimes the same but sometimes different from the cpu results
+
+
 
 # refer: 
 [compute capability](https://en.wikipedia.org/wiki/CUDA#Version_features_and_specifications)
