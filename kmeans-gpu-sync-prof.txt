@@ -1,0 +1,28 @@
+==26057== NVPROF is profiling process 26057, command: ./kmeans-gpu -k 10 -i ./tests/data_N_500000_C_10_R_10_S_0.txt -t 5000 -g -s
+Using 489 blocks of 1024 threads
+==26057== Profiling application: ./kmeans-gpu -k 10 -i ./tests/data_N_500000_C_10_R_10_S_0.txt -t 5000 -g -s
+==26057== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 77.29%  8.69112s      5000  1.7382ms  1.7138ms  2.1965ms  cuda_update_clusters_kernel_sum(float const *, int const *, float*, int*, int)
+ 13.85%  1.55771s     25004  62.298us     352ns  316.36us  [CUDA memcpy DtoH]
+  8.08%  908.27ms      5001  181.62us  180.17us  467.95us  cuda_update_classes_kernel(float const *, float const *, int*, int, int)
+  0.23%  25.471ms      5000  5.0940us  3.8400us  301.83us  cuda_update_clusters_kernel_divide(float*, int*, int)
+  0.21%  23.800ms     20003  1.1890us     544ns  636.53us  [CUDA memcpy HtoD]
+  0.17%  19.546ms      5000  3.9090us  3.8400us  5.5370us  cuda_update_clusters_kernel_clean(float*, int*, int)
+  0.17%  19.258ms      5000  3.8510us  3.6800us  5.3130us  cuda_clean_clusters_kernel(float*, float*, int*, int)
+  0.00%  337.51us         1  337.51us  337.51us  337.51us  cuda_count_classes_kernel_sum(int const *, int*, int)
+  0.00%  5.1200us         1  5.1200us  5.1200us  5.1200us  cuda_count_classes_kernel_clean(int*, int)
+  0.00%  2.9120us         1  2.9120us  2.9120us  2.9120us  [CUDA memcpy DtoD]
+
+==26057== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 97.97%  11.8883s     45008  264.14us  2.5780us  2.2130ms  cudaMemcpy
+  1.05%  127.08ms         5  25.415ms  3.2670us  126.49ms  cudaMalloc
+  0.83%  100.80ms     25003  4.0310us  2.7740us  265.98us  cudaLaunch
+  0.10%  12.521ms    100010     125ns      96ns  260.37us  cudaSetupArgument
+  0.04%  4.6947ms     25003     187ns     126ns  253.48us  cudaConfigureCall
+  0.01%  641.33us        91  7.0470us     241ns  281.01us  cuDeviceGetAttribute
+  0.00%  345.03us         1  345.03us  345.03us  345.03us  cuDeviceTotalMem
+  0.00%  80.447us         1  80.447us  80.447us  80.447us  cuDeviceGetName
+  0.00%  3.5630us         3  1.1870us     370ns  2.6550us  cuDeviceGetCount
+  0.00%  2.3310us         3     777ns     323ns  1.4500us  cuDeviceGet
