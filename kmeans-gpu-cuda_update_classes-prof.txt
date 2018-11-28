@@ -1,21 +1,21 @@
-==3507== NVPROF is profiling process 3507, command: ./kmeans-gpu -k 10 -i ./tests/data_N_500000_C_10_R_10_S_0.txt -t 5000
-==3507== Profiling application: ./kmeans-gpu -k 10 -i ./tests/data_N_500000_C_10_R_10_S_0.txt -t 5000
+==9279== NVPROF is profiling process 9279, command: ./kmeans-gpu -k 10 -i ./tests/data_N_500000_C_10_R_10_S_0.txt -t 5000
 Using 489 blocks of 1024 threads
-==3507== Profiling result:
+==9279== Profiling application: ./kmeans-gpu -k 10 -i ./tests/data_N_500000_C_10_R_10_S_0.txt -t 5000
+==9279== Profiling result:
 Time(%)      Time     Calls       Avg       Min       Max  Name
- 98.26%  1.12484s      5001  224.92us  224.01us  538.26us  cuda_update_classes_kernel(float const *, float const *, int*, int, int)
-  1.08%  12.343ms     10004  1.2330us     608ns  1.4720us  [CUDA memcpy HtoD]
-  0.66%  7.5545ms      5001  1.5100us     832ns  1.8880us  [CUDA memcpy DtoH]
+ 55.36%  3.16356s     10004  316.23us     608ns  652.60us  [CUDA memcpy HtoD]
+ 26.76%  1.52894s      5001  305.73us  304.91us  311.50us  [CUDA memcpy DtoH]
+ 17.88%  1.02187s      5001  204.33us  203.02us  1.5138ms  cuda_update_classes_kernel(float const *, float const *, int*, int, int)
 
-==3507== API calls:
+==9279== API calls:
 Time(%)      Time     Calls       Avg       Min       Max  Name
- 88.86%  1.25947s     15005  83.936us  3.3800us  556.06us  cudaMemcpy
-  8.85%  125.48ms         4  31.370ms  5.9030us  124.35ms  cudaMalloc
-  1.78%  25.293ms      5001  5.0570us  4.4830us  16.305us  cudaLaunch
-  0.24%  3.3508ms     25005     134ns     102ns  259.76us  cudaSetupArgument
-  0.16%  2.2181ms        91  24.374us     250ns  1.6930ms  cuDeviceGetAttribute
-  0.08%  1.1809ms      5001     236ns     174ns  1.1000us  cudaConfigureCall
-  0.03%  358.21us         1  358.21us  358.21us  358.21us  cuDeviceTotalMem
-  0.01%  79.648us         1  79.648us  79.648us  79.648us  cuDeviceGetName
-  0.00%  3.6650us         3  1.2210us     392ns  2.6530us  cuDeviceGetCount
-  0.00%  1.8560us         3     618ns     349ns     954ns  cuDeviceGet
+ 97.68%  6.33807s     15005  422.40us  5.0200us  2.0939ms  cudaMemcpy
+  1.83%  118.92ms         4  29.730ms  5.8640us  118.32ms  cudaMalloc
+  0.41%  26.779ms      5001  5.3540us  4.7020us  23.764us  cudaLaunch
+  0.05%  3.4231ms     25005     136ns     102ns  268.57us  cudaSetupArgument
+  0.02%  1.1431ms      5001     228ns     187ns  3.1050us  cudaConfigureCall
+  0.01%  431.88us        91  4.7450us      95ns  248.55us  cuDeviceGetAttribute
+  0.00%  117.58us         1  117.58us  117.58us  117.58us  cuDeviceTotalMem
+  0.00%  34.855us         1  34.855us  34.855us  34.855us  cuDeviceGetName
+  0.00%  1.1680us         3     389ns      93ns     859ns  cuDeviceGetCount
+  0.00%     788ns         3     262ns     102ns     505ns  cuDeviceGet

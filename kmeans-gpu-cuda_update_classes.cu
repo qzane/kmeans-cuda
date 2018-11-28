@@ -22,6 +22,12 @@ int *CLASSES; // class for each point
 int *NUM_CLASSES; // number of points in each class
 float *CLUSTERS; // position for each cluster
 
+// size for each array
+size_t S_POINTS;
+size_t S_CLASSES;
+size_t S_NUM_CLASSES;
+size_t S_CLUSTERS;
+
 // values on CUDA device
 
 float *D_POINTS; // POINTS[i*2+0]:x POINTS[i*2+1]:y
@@ -97,8 +103,8 @@ void cuda_update_classes(int n, int k){ //based on CLUSTERS
 	cudaError_t cuerr = cudaSuccess; // use with cudaGetErrorString(cuerr);
 	int err;
 	err = 1;
-	err &= cudaMemcpy(D_POINTS, POINTS, sizeof(POINTS), cudaMemcpyHostToDevice) == cudaSuccess;
-	err &= cudaMemcpy(D_CLUSTERS, CLUSTERS, sizeof(CLUSTERS), cudaMemcpyHostToDevice) == cudaSuccess;
+	err &= cudaMemcpy(D_POINTS, POINTS, S_POINTS, cudaMemcpyHostToDevice) == cudaSuccess;
+	err &= cudaMemcpy(D_CLUSTERS, CLUSTERS, S_CLUSTERS, cudaMemcpyHostToDevice) == cudaSuccess;
     if (!err)
     {
         fprintf(stderr, "Failed to copy data from host to device\n");
@@ -110,7 +116,7 @@ void cuda_update_classes(int n, int k){ //based on CLUSTERS
 	
 	// test code begin
 	err = 1;
-	err &= (cuerr = cudaMemcpy(CLASSES, D_CLASSES, sizeof(D_CLASSES), cudaMemcpyDeviceToHost)) == cudaSuccess;
+	err &= (cuerr = cudaMemcpy(CLASSES, D_CLASSES, S_CLASSES, cudaMemcpyDeviceToHost)) == cudaSuccess;
 	//printf("err code %s %d\n", cudaGetErrorString(cuerr), err);
     if (!err)
     {
@@ -123,11 +129,13 @@ void cuda_update_classes(int n, int k){ //based on CLUSTERS
 void update_clusters(int n, int k){ // based on CLASSES
     int i;
 	int _class;
+    
     for(i=0;i<k;i++){
         CLUSTERS[i*2]=0;
         CLUSTERS[i*2+1]=0;
         NUM_CLASSES[i]=0;
     }
+    
     for(i=0;i<n;i++){
         _class = CLASSES[i];
         NUM_CLASSES[_class]++;
@@ -141,15 +149,18 @@ void update_clusters(int n, int k){ // based on CLASSES
         //}
     }    
 }
+
     
 void clean_clusters(int *K){ // remove empty clusters, CLASSES are invalid after this process
-    int i;
-    for(i=0;i<*K;i++){
+    int i = 0;
+    while(i<*K){
         if(NUM_CLASSES[i]==0){
             CLUSTERS[i*2] = CLUSTERS[*K * 2];
             CLUSTERS[i*2+1] = CLUSTERS[*K * 2 + 1];
-            *K--;
-            i--; // the new cluster is not tested
+            NUM_CLASSES[i]= NUM_CLASSES[*K];
+            (*K)--;
+        }else{
+            i++;
         }
     }
 }
@@ -160,7 +171,8 @@ void init(int n, int k, char *input){ // malloc and read points (and clusters)
     float x,y;
     
     // read points
-    POINTS = (float*)malloc(n * 2 * sizeof(float));
+    S_POINTS = n * 2 * sizeof(float);
+    POINTS = (float*)malloc(S_POINTS);
     
     inputFile = fopen(input, "r");
     for(i=0;i<n;i++){
@@ -172,11 +184,14 @@ void init(int n, int k, char *input){ // malloc and read points (and clusters)
     fclose(inputFile);
     
     // classes init
-    CLASSES = (int*)malloc(n * sizeof(int));
+    S_CLASSES = n * sizeof(int);
+    CLASSES = (int*)malloc(S_CLASSES);
     
     // clusters init
-    NUM_CLASSES = (int*)malloc(k * sizeof(int));
-    CLUSTERS = (float*)malloc(k * 2 * sizeof(float));
+    S_NUM_CLASSES = k * sizeof(int);
+    S_CLUSTERS = k * 2 * sizeof(float);
+    NUM_CLASSES = (int*)malloc(S_NUM_CLASSES);
+    CLUSTERS = (float*)malloc(S_CLUSTERS);
     for(i=0;i<k;i++){
         CLUSTERS[i*2]=POINTS[i*2];
         CLUSTERS[i*2+1]=POINTS[i*2+1];
@@ -188,11 +203,11 @@ void cuda_init(int n, int k){ // malloc and copy data to device
 	cudaError_t cuerr = cudaSuccess; // use with cudaGetErrorString(cuerr);
 	int noerr = 1;
 	// malloc
-	noerr &= (cuerr = cudaMalloc((void **)&D_POINTS, n * 2 * sizeof(float))) == cudaSuccess;
+	noerr &= (cuerr = cudaMalloc((void **)&D_POINTS, S_POINTS)) == cudaSuccess;
 	//printf("err code %s\n", cudaGetErrorString(cuerr));
-	noerr &= (cuerr = cudaMalloc((void **)&D_CLASSES, n * sizeof(int))) == cudaSuccess;
-	noerr &= (cuerr = cudaMalloc((void **)&D_NUM_CLASSES, k * sizeof(int))) == cudaSuccess;
-	noerr &= (cuerr = cudaMalloc((void **)&D_CLUSTERS, k * 2 * sizeof(float))) == cudaSuccess;
+	noerr &= (cuerr = cudaMalloc((void **)&D_CLASSES, S_CLASSES)) == cudaSuccess;
+	noerr &= (cuerr = cudaMalloc((void **)&D_NUM_CLASSES, S_NUM_CLASSES)) == cudaSuccess;
+	noerr &= (cuerr = cudaMalloc((void **)&D_CLUSTERS, S_CLUSTERS)) == cudaSuccess;
     
     
     if (!noerr)
@@ -203,8 +218,8 @@ void cuda_init(int n, int k){ // malloc and copy data to device
 	
 	// copy data
 	noerr = 1;
-	noerr &= cudaMemcpy(D_POINTS, POINTS, sizeof(POINTS), cudaMemcpyHostToDevice) == cudaSuccess;
-	noerr &= cudaMemcpy(D_CLUSTERS, CLUSTERS, sizeof(CLUSTERS), cudaMemcpyHostToDevice) == cudaSuccess;
+	noerr &= cudaMemcpy(D_POINTS, POINTS, S_POINTS, cudaMemcpyHostToDevice) == cudaSuccess;
+	noerr &= cudaMemcpy(D_CLUSTERS, CLUSTERS, S_CLUSTERS, cudaMemcpyHostToDevice) == cudaSuccess;
     if (!noerr)
     {
         fprintf(stderr, "Failed to copy data from host to device\n");
@@ -312,11 +327,11 @@ int main(int argc, char **argv) {
     }
     init(N, K, INPUT_FILE);
 	cuda_init(N, K);
-	//update_classes(N, K);
+	update_classes(N, K);
 	cuda_update_classes(N, K);
     for(t=0;t<T;t++){
 		if(t!=0){
-			;//clean_clusters(&K);
+			clean_clusters(&K);
 		}
         //update_classes(N, K);
 		cuda_update_classes(N, K);
