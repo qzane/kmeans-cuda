@@ -11,7 +11,8 @@
 //todo: the ending criteria
 
 const int ThreadsPerBlock = 1024; // max value since CC2.0
-int BlocksPerGrid = 0;
+int BlocksPerGridN = 0;
+int BlocksPerGridK = 0;
 
 int N; // number of points
 int K; // number of clusters
@@ -121,7 +122,7 @@ void cuda_update_classes(int n, int k, int sync=1){ // based on CLUSTERS, sync: 
         }
     }
     
-    cuda_update_classes_kernel<<<BlocksPerGrid, ThreadsPerBlock>>>(D_POINTS, D_CLUSTERS, D_CLASSES, n, k);
+    cuda_update_classes_kernel<<<BlocksPerGridN, ThreadsPerBlock>>>(D_POINTS, D_CLUSTERS, D_CLASSES, n, k);
 	
 	// copy result to host
     if(sync){
@@ -185,8 +186,8 @@ void cuda_count_classes(int n, int k, int sync=1){
         }
     }
     
-    cuda_count_classes_kernel_clean<<<BlocksPerGrid, ThreadsPerBlock>>>(D_NUM_CLASSES, k);
-    cuda_count_classes_kernel_sum<<<BlocksPerGrid, ThreadsPerBlock>>>(D_CLASSES, D_NUM_CLASSES, n);
+    cuda_count_classes_kernel_clean<<<BlocksPerGridK, ThreadsPerBlock>>>(D_NUM_CLASSES, k);
+    cuda_count_classes_kernel_sum<<<BlocksPerGridN, ThreadsPerBlock>>>(D_CLASSES, D_NUM_CLASSES, n);
 	
 	// copy result to host
     if(sync){
@@ -260,7 +261,7 @@ __global__ void cuda_update_clusters_kernel_sum(const float *d_points,
 }
 
 __global__ void cuda_update_clusters_kernel_divide(float *d_clusters,
-                                                   int *d_num_classes, 
+                                                   const int *d_num_classes, 
                                                    int k){
     int i;
 	i = blockDim.x * blockIdx.x + threadIdx.x;
@@ -286,9 +287,9 @@ void cuda_update_clusters(int n, int k, int sync=1){ // based on CLUSTERS, sync:
         }
     }
     
-    cuda_update_clusters_kernel_clean<<<BlocksPerGrid, ThreadsPerBlock>>>(D_CLUSTERS, D_NUM_CLASSES, k);
-    cuda_update_clusters_kernel_sum<<<BlocksPerGrid, ThreadsPerBlock>>>(D_POINTS, D_CLASSES, D_CLUSTERS, D_NUM_CLASSES, n);
-    cuda_update_clusters_kernel_divide<<<BlocksPerGrid, ThreadsPerBlock>>>(D_CLUSTERS, D_NUM_CLASSES, k);
+    cuda_update_clusters_kernel_clean<<<BlocksPerGridK, ThreadsPerBlock>>>(D_CLUSTERS, D_NUM_CLASSES, k);
+    cuda_update_clusters_kernel_sum<<<BlocksPerGridN, ThreadsPerBlock>>>(D_POINTS, D_CLASSES, D_CLUSTERS, D_NUM_CLASSES, n);
+    cuda_update_clusters_kernel_divide<<<BlocksPerGridK, ThreadsPerBlock>>>(D_CLUSTERS, D_NUM_CLASSES, k);
 	
 	// copy result to host
     if(sync){
@@ -366,7 +367,7 @@ void cuda_clean_clusters(int n, int *K=NULL, int sync=1){ // use old positions f
         }
     }
     
-    cuda_clean_clusters_kernel<<<BlocksPerGrid, ThreadsPerBlock>>>(D_CLUSTERS, D_OLD_CLUSTERS, D_NUM_CLASSES, *K);
+    cuda_clean_clusters_kernel<<<BlocksPerGridK, ThreadsPerBlock>>>(D_CLUSTERS, D_OLD_CLUSTERS, D_NUM_CLASSES, *K);
 	
 	// copy result to host
     if(sync){
@@ -436,7 +437,6 @@ void init(int n, int k, char *input, int updateClasses){ // malloc and read poin
     }
 }
 
-
 void cuda_init(int n, int k){ // malloc and copy data to device
 	cudaError_t cuerr = cudaSuccess; // use with cudaGetErrorString(cuerr);
 	int noerr = 1;
@@ -467,8 +467,9 @@ void cuda_init(int n, int k){ // malloc and copy data to device
     }
 	
 	// blocksPerGrid
-	BlocksPerGrid = (n + ThreadsPerBlock - 1) / ThreadsPerBlock;
-	printf("Using %d blocks of %d threads\n", BlocksPerGrid, ThreadsPerBlock);
+	BlocksPerGridN = (n + ThreadsPerBlock - 1) / ThreadsPerBlock;
+	BlocksPerGridK = (k + ThreadsPerBlock - 1) / ThreadsPerBlock;
+	printf("Using %d blocks of %d threads\n", BlocksPerGridN, ThreadsPerBlock);
 	
     // update classes
     cuda_update_classes(n, k);
@@ -488,7 +489,6 @@ void cuda_toHost(int n, int k){
     }
 }
 
-
 int data_count(char *fileName){
     FILE *inputFile;
     float x, y;
@@ -501,7 +501,6 @@ int data_count(char *fileName){
     fclose(inputFile);
     return count;
 }
-
 
 int cmd_parser(int argc, char **argv, int *n, int *k, int *t, char *input){
     int invalid;
@@ -556,7 +555,6 @@ int cmd_parser(int argc, char **argv, int *n, int *k, int *t, char *input){
         }
     }
 	
-    
     if(valid && *n==-1){
         *n = data_count(input);
     }
@@ -581,7 +579,6 @@ int cmd_parser(int argc, char **argv, int *n, int *k, int *t, char *input){
 	
     return invalid;    
 }
-
 
 int main(int argc, char **argv) {
     int t;
