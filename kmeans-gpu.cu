@@ -30,6 +30,9 @@ size_t S_POINTS;
 size_t S_CLASSES;
 size_t S_NUM_CLASSES;
 size_t S_CLUSTERS;
+size_t S_COUNT_COND;
+size_t S_X_COND;
+size_t S_Y_COND;
 
 // values on CUDA device
 int USEGPU; // use gpu or cpu
@@ -41,6 +44,9 @@ int *D_NUM_CLASSES; // number of points in each class
 float *D_CLUSTERS; // position for each cluster
 float *D_OLD_CLUSTERS; // position for each cluster
 
+int *COUNT_COND; // size K * N, for reduction
+float *X_COND; // size k * N, for reduction
+float *Y_COND; // size k * N, for reduction
 
 void write_results(int n, int k){
     FILE *outputFile;
@@ -260,6 +266,58 @@ __global__ void cuda_update_clusters_kernel_sum(const float *d_points,
 	}
 }
 
+__global__ void cuda_update_clusters_kernel_sum_2(const float *d_points,
+                                                    const int *d_classes,
+                                                    float *d_clusters,
+                                                    int *d_num_classes,
+                                                    int n,
+                                                    int k,
+                                                    int *count_cond
+                                                    float *x_cond,
+                                                    float *y_cond){
+    int i;
+    int cluster;
+    int _class;
+    int stride;
+    i = blockDim.x * blockIdx.x + threadIdx.x;
+    if(i < n){
+        _class = d_classes[i];
+
+        for(cluster=0; cluster<k; cluster++)
+        {
+            if (cluster==_class){
+                count_cond[cluster*n + i] = 1;
+                x_cond[cluster*n + i] = d_points[i*2];
+                y_cond[cluster*n + i] = d_points[i*2 +1];
+            }
+            else{
+                count_cond[cluster*k + i] = 0;
+                x_cond[cluster*k + i] = 0;
+                y_cond[cluster*k + i] = 0;
+            }
+            __syncthreads();
+            for(stride = n/2; stride > 0; stride/=2){
+                if(i < stride)
+                {
+                    count_cond[cluster*k + i] += count_cond[cluster*k + i + stride];
+                    x_cond[cluster*k + i] += x_cond[cluster*k + i + stride];
+                    y_cond[cluster*k + i] += y_cond[cluster*k + i + stride];
+                }
+                __syncthreads();
+            }
+            if (i==0) // use arbitrary one thread to copy values, here we use the first thread
+            {
+                for(cluster=0; cluster<k; cluster++){
+                    d_num_classes[cluster] = count_cond[cluster*k];
+                    d_clusters[cluster*2] = x_cond[cluster*k];
+                    d_clusters[cluster*2+1] = y_cond[cluster*k];
+                }
+                
+            }
+        }
+    }
+}
+
 __global__ void cuda_update_clusters_kernel_divide(float *d_clusters,
                                                    const int *d_num_classes, 
                                                    int k){
@@ -418,7 +476,13 @@ void init(int n, int k, char *input, int updateClasses){ // malloc and read poin
     // classes init
     S_CLASSES = n * sizeof(int);
     CLASSES = (int*)malloc(S_CLASSES);
-    
+    // reduce sum variable init
+    S_COUNT_COND = n * k * sizeof(int);
+    COUNT_COND = (int*)malloc(S_COUNT_COND);
+    S_X_COND = n * k * sizeof(float);
+    X_COND = (float*)malloc(S_X_COND);
+    S_Y_COND = n * k * sizeof(float);
+    Y_COND = (float*)malloc(S_Y_COND);
     // clusters init
     S_NUM_CLASSES = k * sizeof(int);
     S_CLUSTERS = k * 2 * sizeof(float);
@@ -446,7 +510,11 @@ void cuda_init(int n, int k){ // malloc and copy data to device
 	noerr &= (cuerr = cudaMalloc((void **)&D_CLASSES, S_CLASSES)) == cudaSuccess;
 	noerr &= (cuerr = cudaMalloc((void **)&D_NUM_CLASSES, S_NUM_CLASSES)) == cudaSuccess;
 	noerr &= (cuerr = cudaMalloc((void **)&D_CLUSTERS, S_CLUSTERS)) == cudaSuccess;
-	noerr &= (cuerr = cudaMalloc((void **)&D_OLD_CLUSTERS, S_CLUSTERS)) == cudaSuccess;
+    noerr &= (cuerr = cudaMalloc((void **)&D_OLD_CLUSTERS, S_CLUSTERS)) == cudaSuccess;
+    
+    noerr &= (cuerr = cudaMalloc((void **)&COUNT_COND, S_COUNT_COND)) == cudaSuccess;
+    noerr &= (cuerr = cudaMalloc((void **)&X_COND, S_X_COND)) == cudaSuccess;
+    noerr &= (cuerr = cudaMalloc((void **)&Y_COND, S_Y_COND)) == cudaSuccess;
     
     
     if (!noerr)
