@@ -311,6 +311,7 @@ __global__ void cuda_update_clusters_kernel_sum_2(const float *d_points,
                 d_clusters[i*2] = x_cond[i*n];
                 d_clusters[i*2+1] = y_cond[i*n];
             }
+            __syncthreads();
         }
     }
 }
