@@ -291,17 +291,17 @@ __global__ void cuda_update_clusters_kernel_sum_2(const float *d_points,
                 y_cond[cluster*n + i] = d_points[i*2 +1];
             }
             else{
-                count_cond[cluster*k + i] = 0;
-                x_cond[cluster*k + i] = 0;
-                y_cond[cluster*k + i] = 0;
+                count_cond[cluster*n + i] = 0;
+                x_cond[cluster*n + i] = 0;
+                y_cond[cluster*n + i] = 0;
             }
             __syncthreads();
             for(stride = n/2; stride > 0; stride/=2){
                 if(i < stride)
                 {
-                    count_cond[cluster*k + i] += count_cond[cluster*k + i + stride];
-                    x_cond[cluster*k + i] += x_cond[cluster*k + i + stride];
-                    y_cond[cluster*k + i] += y_cond[cluster*k + i + stride];
+                    count_cond[cluster*n + i] += count_cond[cluster*n + i + stride];
+                    x_cond[cluster*n + i] += x_cond[cluster*n + i + stride];
+                    y_cond[cluster*n + i] += y_cond[cluster*n + i + stride];
                 }
                 __syncthreads();
             }
