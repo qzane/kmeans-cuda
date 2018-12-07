@@ -305,14 +305,11 @@ __global__ void cuda_update_clusters_kernel_sum_2(const float *d_points,
                 }
                 __syncthreads();
             }
-            if (i==0) // use arbitrary one thread to copy values, here we use the first thread
+            if (i < k) // use k threads to copy values
             {
-                for(cluster=0; cluster<k; cluster++){
-                    d_num_classes[cluster] = count_cond[cluster*k];
-                    d_clusters[cluster*2] = x_cond[cluster*k];
-                    d_clusters[cluster*2+1] = y_cond[cluster*k];
-                }
-                
+                d_num_classes[i] = count_cond[i*k];
+                d_clusters[i*2] = x_cond[i*k];
+                d_clusters[i*2+1] = y_cond[i*k];
             }
         }
     }
