@@ -272,7 +272,7 @@ __global__ void cuda_update_clusters_kernel_sum_2(const float *d_points,
                                                     int *d_num_classes,
                                                     int n,
                                                     int k,
-                                                    int *count_cond
+                                                    int *count_cond,
                                                     float *x_cond,
                                                     float *y_cond){
     int i;
@@ -305,14 +305,14 @@ __global__ void cuda_update_clusters_kernel_sum_2(const float *d_points,
                 }
                 __syncthreads();
             }
-            if (i < k) // use k threads to copy values
-            {
-                d_num_classes[i] = count_cond[i*n];
-                d_clusters[i*2] = x_cond[i*n];
-                d_clusters[i*2+1] = y_cond[i*n];
-            }
-            __syncthreads();
         }
+        if (i < k) // use k threads to copy values
+        {
+            d_num_classes[i] = count_cond[i*n];
+            d_clusters[i*2] = x_cond[i*n];
+            d_clusters[i*2+1] = y_cond[i*n];
+        }
+        __syncthreads();
     }
 }
 
@@ -342,9 +342,9 @@ void cuda_update_clusters(int n, int k, int sync=1){ // based on CLUSTERS, sync:
             exit(EXIT_FAILURE);
         }
     }
-    
+
     cuda_update_clusters_kernel_clean<<<BlocksPerGridK, ThreadsPerBlock>>>(D_CLUSTERS, D_NUM_CLASSES, k);
-    cuda_update_clusters_kernel_sum<<<BlocksPerGridN, ThreadsPerBlock>>>(D_POINTS, D_CLASSES, D_CLUSTERS, D_NUM_CLASSES, n);
+    cuda_update_clusters_kernel_sum_2<<<BlocksPerGridN, ThreadsPerBlock>>>(D_POINTS, D_CLASSES, D_CLUSTERS, D_NUM_CLASSES, n, k, COUNT_COND, X_COND, Y_COND);
     cuda_update_clusters_kernel_divide<<<BlocksPerGridK, ThreadsPerBlock>>>(D_CLUSTERS, D_NUM_CLASSES, k);
 	
 	// copy result to host
@@ -659,7 +659,11 @@ int main(int argc, char **argv) {
     }else{
         init(N, K, INPUT_FILE, 1);
     }
-    
+    cudaEvent_t start, stop;
+    float time;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start, 0);
     for(t=0;t<T;t++){ 
         
         if(USEGPU){
@@ -672,6 +676,12 @@ int main(int argc, char **argv) {
             update_clusters(N, K);
         }
     }
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize( stop );
+    cudaEventElapsedTime( &time, start, stop );
+    cudaEventDestroy( start );
+    cudaEventDestroy( stop );
+    printf("Time for core computation: %f ms", time);
     if(USEGPU){
         cuda_toHost(N, K);
     }
