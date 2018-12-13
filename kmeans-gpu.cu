@@ -344,7 +344,8 @@ void cuda_update_clusters(int n, int k, int sync=1){ // based on CLUSTERS, sync:
     }
 
     cuda_update_clusters_kernel_clean<<<BlocksPerGridK, ThreadsPerBlock>>>(D_CLUSTERS, D_NUM_CLASSES, k);
-    cuda_update_clusters_kernel_sum_2<<<BlocksPerGridN, ThreadsPerBlock>>>(D_POINTS, D_CLASSES, D_CLUSTERS, D_NUM_CLASSES, n, k, COUNT_COND, X_COND, Y_COND);
+    cuda_update_clusters_kernel_sum<<<BlocksPerGridN, ThreadsPerBlock>>>(D_POINTS, D_CLASSES, D_CLUSTERS, D_NUM_CLASSES, n);
+    //cuda_update_clusters_kernel_sum_2<<<BlocksPerGridN, ThreadsPerBlock>>>(D_POINTS, D_CLASSES, D_CLUSTERS, D_NUM_CLASSES, n, k, COUNT_COND, X_COND, Y_COND);
     cuda_update_clusters_kernel_divide<<<BlocksPerGridK, ThreadsPerBlock>>>(D_CLUSTERS, D_NUM_CLASSES, k);
 	
 	// copy result to host
@@ -681,7 +682,7 @@ int main(int argc, char **argv) {
     cudaEventElapsedTime( &time, start, stop );
     cudaEventDestroy( start );
     cudaEventDestroy( stop );
-    printf("Time for core computation: %f ms", time);
+    printf("Time for core computation: %f ms\n", time);
     if(USEGPU){
         cuda_toHost(N, K);
     }
