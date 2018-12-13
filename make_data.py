@@ -18,6 +18,7 @@ def main(num, centers, max_range, std):
         y = y.reshape((-1 ,1))
         points = np.concatenate([x,y], axis=1)
         data.append(points)
+    random.shuffle(data)
     data = np.concatenate(data, axis=0)
     file = open('./tests/data_N_%d_C_%d_R_%d_S_%d.txt' % (num,centers,max_range,std),'w')
     for i in range(data.shape[0]):
