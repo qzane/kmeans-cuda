@@ -34,3 +34,5 @@ the Classes.txt are sometimes the same but sometimes different from the cpu resu
 # refer: 
 [compute capability](https://en.wikipedia.org/wiki/CUDA#Version_features_and_specifications)
 [atomic functions](https://docs.nvidia.com/cuda/archive/9.2/cuda-c-programming-guide/index.html#atomic-functions)
+[reduction](https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf)
+[shared memory](https://stackoverflow.com/questions/8011376/when-is-cudas-shared-memory-useful)
