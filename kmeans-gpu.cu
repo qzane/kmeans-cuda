@@ -573,11 +573,12 @@ int cmd_parser(int argc, char **argv, int *n, int *k, int *t, char *input){
     int invalid;
     int valid;
     char ch;
-    char usage[] = "Usage: %s -n N -k K -t T -i Input.txt\n"
+    char usage[] = "Usage: %s -n N -k K -t T -i Input.txt [-g]\n"
                    "    N: Number_of_Points, default: the number of lines in Input_File\n"
                    "    K: default: 2\n"
                    "    T: max iterations for the kmeans algorithm\n"
                    "    Input: should be n lines, two floats in each line and split by ','\n"
+                   "    -g: Use GPU, otherwise, use CPU only.\n"
 		           "    Results will be in Classes.txt and Clusters.txt\n";
     invalid = 0;
     valid = 0;
