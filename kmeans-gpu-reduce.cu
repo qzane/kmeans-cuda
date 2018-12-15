@@ -669,7 +669,7 @@ int main(int argc, char **argv) {
         }
 		if(SYNC){
 			printf("NUM CLASSES ");
-			for(int i=0;i<k;i++){
+			for(int i=0;i<K;i++){
 				printf("%d, ",NUM_CLASSES[i]);
 			}
 			printf("\n");
