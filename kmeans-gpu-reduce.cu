@@ -292,7 +292,7 @@ __global__ void cuda_update_clusters_kernel_sum_reduce(const float *d_points,
 		
 		for(cluster=0;cluster<k;cluster++){
 			cluster_mem = cluster * blockDim.x + tid;
-			for(stride=blockDim.x/2;stride>0;s>>=1){
+			for(stride=blockDim.x/2;stride>0;stride>>=1){
 				if(tid<stride){
 					shared_num_classes[cluster_mem]+=shared_num_classes[cluster_mem+stride];
 					shared_clusters_x[cluster_mem]+=shared_clusters_x[cluster_mem+stride];
@@ -568,6 +568,7 @@ int cmd_parser(int argc, char **argv, int *n, int *k, int *t, char *input){
                    "    T: max iterations for the kmeans algorithm\n"
                    "    Input: should be n lines, two floats in each line and split by ','\n"
                    "    -g: Use GPU, otherwise, use CPU only.\n"
+				   "    -s: synchronize after each step (for debug).\n"
 		           "    Results will be in Classes.txt and Clusters.txt\n";
     invalid = 0;
     valid = 0;
@@ -666,6 +667,13 @@ int main(int argc, char **argv) {
 	        update_classes(N, K);
             update_clusters(N, K);
         }
+		if(SYNC){
+			printf("NUM CLASSES ");
+			for(int i=0;i<k;i++){
+				printf("%d, ",NUM_CLASSES[i]);
+			}
+			printf("\n");
+		}
     }
     cudaEventRecord(stop, 0);
     cudaEventSynchronize( stop );
