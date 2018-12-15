@@ -278,12 +278,13 @@ __global__ void cuda_update_clusters_kernel_sum_reduce(const float *d_points,
 	if(i < n){
         _class = d_classes[i];
 		for(cluster=0;cluster<k;cluster++){
+			cluster_mem = cluster * blockDim.x + tid;
 			if(cluster==_class){
 				shared_num_classes[cluster_mem]=1;
 				shared_clusters_x[cluster_mem] = d_points[i*2];
 				shared_clusters_y[cluster_mem] = d_points[i*2+1];
 			}else{
-				shared_num_classes[cluster_mem]=0;
+				shared_num_classes[cluster_mem]= 0;
 				shared_clusters_x[cluster_mem] = 0;
 				shared_clusters_y[cluster_mem] = 0;
 			}
