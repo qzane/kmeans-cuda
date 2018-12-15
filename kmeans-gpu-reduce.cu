@@ -296,6 +296,9 @@ __global__ void cuda_update_clusters_kernel_sum_reduce(const float *d_points,
                 }
                 __syncthreads();
             }
+			/* we understand that a better way is to store the results of each blocks
+			   and apply another reduce. But there are just a few blocks running at 
+			   the same time, so we believe this version is fast enough.*/
 			if(tid==0){
 				atomicAdd(&d_num_classes[cluster],shared_num_classes[0]);
 				atomicAdd(&d_clusters[cluster*2],shared_clusters_x[0]);
