@@ -2,13 +2,15 @@
 COMP 633 project: kmeans in cuda
 
 # todo
-0. write cuda version
-1. read clusters from file
-2. the choise for init clusters
+0. write cuda version～～done
+1. read clusters from file～～done
+2. the choise for init clusters～～done
 3. the ending criteria
-4. data maker (maybe using python)
-5. visiualization (maybe using python)
-6. performance profile (running time)
+4. data maker (maybe using python)～～done
+5. visiualization (maybe using python)～～done
+6. performance profile (running time)～～done
+8. replace atomicAdd with parallel reduction～～done
+9. optimize the program using skills in [reduction](https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf)
 
 # cuda
 * the compute capability of Titan V is 7.0 (on phaedra)
