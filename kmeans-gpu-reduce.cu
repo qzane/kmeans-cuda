@@ -88,28 +88,28 @@ __global__ void cuda_update_classes_kernel(const float *d_points,
                                            int n, int k){
     int i,j,minK;
     float minDis, dis, disX, disY;
-	i = blockDim.x * blockIdx.x + threadIdx.x;
-	if(i < n){
-		disX = d_points[i*2]-d_clusters[0];
-		disY = d_points[i*2+1]-d_clusters[1];
-		minK = 0;
-		minDis = disX*disX + disY*disY;
-		for(j=1;j<k;j++){
-			disX = d_points[i*2]-d_clusters[j*2];
-			disY = d_points[i*2+1]-d_clusters[j*2+1];
-			dis = disX*disX + disY*disY;
-			if(dis<minDis){
-				minK = j;
-				minDis = dis;
-			}
-		}
-		d_classes[i] = minK;	
-	}
+    i = blockDim.x * blockIdx.x + threadIdx.x;
+    if(i < n){
+        disX = d_points[i*2]-d_clusters[0];
+        disY = d_points[i*2+1]-d_clusters[1];
+        minK = 0;
+        minDis = disX*disX + disY*disY;
+        for(j=1;j<k;j++){
+            disX = d_points[i*2]-d_clusters[j*2];
+            disY = d_points[i*2+1]-d_clusters[j*2+1];
+            dis = disX*disX + disY*disY;
+            if(dis<minDis){
+                minK = j;
+                minDis = dis;
+            }
+        }
+        d_classes[i] = minK;    
+    }
 }
 
 void cuda_update_classes(int n, int k, int sync=1){ // based on CLUSTERS, sync: synchronize between host and device
-	cudaError_t cuerr = cudaSuccess; // use with cudaGetErrorString(cuerr);
-	int err;
+    cudaError_t cuerr = cudaSuccess; // use with cudaGetErrorString(cuerr);
+    int err;
     // copy data to device
     if(sync){
         err = 1;
@@ -123,8 +123,8 @@ void cuda_update_classes(int n, int k, int sync=1){ // based on CLUSTERS, sync: 
     }
     
     cuda_update_classes_kernel<<<BlocksPerGridN, ThreadsPerBlock>>>(D_POINTS, D_CLUSTERS, D_CLASSES, n, k);
-	
-	// copy result to host
+    
+    // copy result to host
     if(sync){
         err = 1;
         err &= (cuerr = cudaMemcpy(CLASSES, D_CLASSES, S_CLASSES, cudaMemcpyDeviceToHost)) == cudaSuccess;
@@ -150,10 +150,10 @@ void count_classes(int n, int k){
 __global__ void cuda_count_classes_kernel_clean(int *d_num_classes, 
                                                 int k){
     int i;
-	i = blockDim.x * blockIdx.x + threadIdx.x;
-	if(i < k){
+    i = blockDim.x * blockIdx.x + threadIdx.x;
+    if(i < k){
         d_num_classes[i]=0;
-	}
+    }
 }
 
 
@@ -162,17 +162,17 @@ __global__ void cuda_count_classes_kernel_sum(const int *d_classes,
                                               int n){
     int i;
     int _class;
-	i = blockDim.x * blockIdx.x + threadIdx.x;
-	if(i < n){
+    i = blockDim.x * blockIdx.x + threadIdx.x;
+    if(i < n){
         _class = d_classes[i];
         atomicAdd(&d_num_classes[_class], 1);
         //d_num_classes[_class] += 1;
-	}
+    }
 }
 
 void cuda_count_classes(int n, int k, int sync=1){
-	cudaError_t cuerr = cudaSuccess; // use with cudaGetErrorString(cuerr);
-	int err;
+    cudaError_t cuerr = cudaSuccess; // use with cudaGetErrorString(cuerr);
+    int err;
     
     // copy data to device
     if(sync){
@@ -188,8 +188,8 @@ void cuda_count_classes(int n, int k, int sync=1){
     
     cuda_count_classes_kernel_clean<<<BlocksPerGridK, ThreadsPerBlock>>>(D_NUM_CLASSES, k);
     cuda_count_classes_kernel_sum<<<BlocksPerGridN, ThreadsPerBlock>>>(D_CLASSES, D_NUM_CLASSES, n);
-	
-	// copy result to host
+    
+    // copy result to host
     if(sync){
         err = 1;
         err &= (cuerr = cudaMemcpy(NUM_CLASSES, D_NUM_CLASSES, S_NUM_CLASSES, cudaMemcpyDeviceToHost)) == cudaSuccess;
@@ -204,7 +204,7 @@ void cuda_count_classes(int n, int k, int sync=1){
     
 void update_clusters(int n, int k){ // based on CLASSES
     int i;
-	int _class;
+    int _class;
     // clean
     for(i=0;i<k;i++){
         CLUSTERS[i*2]=0;
@@ -232,12 +232,12 @@ __global__ void cuda_update_clusters_kernel_clean(float *d_clusters,
                                                   int *d_num_classes, 
                                                   int k){
     int i;
-	i = blockDim.x * blockIdx.x + threadIdx.x;
-	if(i < k){
+    i = blockDim.x * blockIdx.x + threadIdx.x;
+    if(i < k){
         d_clusters[i*2]=0;
         d_clusters[i*2+1]=0;
         d_num_classes[i]=0;
-	}
+    }
 }
 
 
@@ -248,8 +248,8 @@ __global__ void cuda_update_clusters_kernel_sum(const float *d_points,
                                                 int n){
     int i;
     int _class;
-	i = blockDim.x * blockIdx.x + threadIdx.x;
-	if(i < n){
+    i = blockDim.x * blockIdx.x + threadIdx.x;
+    if(i < n){
         _class = d_classes[i];
         atomicAdd(&d_num_classes[_class], 1);
         //d_num_classes[_class] += 1;
@@ -257,7 +257,7 @@ __global__ void cuda_update_clusters_kernel_sum(const float *d_points,
         //d_clusters[_class*2] += d_points[i*2];
         atomicAdd(&d_clusters[_class*2+1], d_points[i*2+1]);
         //d_clusters[_class*2+1] += d_points[i*2+1];
-	}
+    }
 }
 
 
@@ -267,50 +267,43 @@ __global__ void cuda_update_clusters_kernel_sum_reduce(const float *d_points,
                                                        int *d_num_classes,
                                                        int n, int k){
     extern __shared__ int shared[];
-	int *shared_num_classes = shared;
-	float *shared_clusters_x = (float*)&shared_num_classes[blockDim.x*k];
-	float *shared_clusters_y = (float*)&shared_clusters_x[blockDim.x*k];
-	
-	int i,tid;
-    int _class, cluster, cluster_mem, stride;
-	tid = threadIdx.x;
-	i = blockDim.x * blockIdx.x + threadIdx.x;
-	if(i < n){
+    int *shared_num_classes = shared;
+    float *shared_clusters_x = (float*)&shared_num_classes[blockDim.x];
+    float *shared_clusters_y = (float*)&shared_clusters_x[blockDim.x];
+    
+    int i,tid;
+    int _class, cluster, stride;
+    tid = threadIdx.x;
+    i = blockDim.x * blockIdx.x + threadIdx.x;
+    if(i < n){
         _class = d_classes[i];
-		for(cluster=0;cluster<k;cluster++){
-			cluster_mem = cluster * blockDim.x + tid;
-			if(cluster==_class){
-				shared_num_classes[cluster_mem]=1;
-				shared_clusters_x[cluster_mem] = d_points[i*2];
-				shared_clusters_y[cluster_mem] = d_points[i*2+1];
-			}else{
-				shared_num_classes[cluster_mem]= 0;
-				shared_clusters_x[cluster_mem] = 0;
-				shared_clusters_y[cluster_mem] = 0;
-			}
+        for(cluster=0;cluster<k;cluster++){
+            if(cluster==_class){
+                shared_num_classes[tid]=1;
+                shared_clusters_x[tid] = d_points[i*2];
+                shared_clusters_y[tid] = d_points[i*2+1];
+            }else{
+                shared_num_classes[tid]= 0;
+                shared_clusters_x[tid] = 0;
+                shared_clusters_y[tid] = 0;
+            }
+			__syncthreads();
+            for(stride=blockDim.x/2;stride>0;stride>>=1){
+                if(tid<stride){
+                    shared_num_classes[tid]+=shared_num_classes[tid+stride];
+                    shared_clusters_x[tid]+=shared_clusters_x[tid+stride];
+                    shared_clusters_y[tid]+=shared_clusters_y[tid+stride];
+                }
+                __syncthreads();
+            }
+			if(tid==0){
+				d_num_classes[cluster] += shared_num_classes[0];
+				d_clusters[cluster*2] += shared_clusters_x[0];
+				d_clusters[cluster*2+1]+=shared_clusters_y[0];
+			} 
 		}
-		__syncthreads();
-		
-		for(cluster=0;cluster<k;cluster++){
-			cluster_mem = cluster * blockDim.x + tid;
-			for(stride=blockDim.x/2;stride>0;stride>>=1){
-				if(tid<stride){
-					shared_num_classes[cluster_mem]+=shared_num_classes[cluster_mem+stride];
-					shared_clusters_x[cluster_mem]+=shared_clusters_x[cluster_mem+stride];
-					shared_clusters_y[cluster_mem]+=shared_clusters_y[cluster_mem+stride];
-				}
-				__syncthreads();
-			}
-		}
-		
-		if(tid<k){
-			d_num_classes[tid] += shared_num_classes[tid*blockDim.x];
-			d_clusters[tid*2] += shared_clusters_x[tid*blockDim.x];
-			d_clusters[tid*2+1]+=shared_clusters_y[tid*blockDim.x];
-		}			
-		
 	}
-	
+    
 }
 
 
@@ -320,16 +313,16 @@ __global__ void cuda_update_clusters_kernel_divide(float *d_clusters,
                                                    const int *d_num_classes, 
                                                    int k){
     int i;
-	i = blockDim.x * blockIdx.x + threadIdx.x;
-	if(i < k){
+    i = blockDim.x * blockIdx.x + threadIdx.x;
+    if(i < k){
         d_clusters[i*2] /= d_num_classes[i];
         d_clusters[i*2+1] /= d_num_classes[i];
-	}
+    }
 }
 
 void cuda_update_clusters(int n, int k, int sync=1){ // based on CLUSTERS, sync: synchronize between host and device
-	cudaError_t cuerr = cudaSuccess; // use with cudaGetErrorString(cuerr);
-	int err;
+    cudaError_t cuerr = cudaSuccess; // use with cudaGetErrorString(cuerr);
+    int err;
     
     // copy data to device
     if(sync){
@@ -345,10 +338,10 @@ void cuda_update_clusters(int n, int k, int sync=1){ // based on CLUSTERS, sync:
 
     cuda_update_clusters_kernel_clean<<<BlocksPerGridK, ThreadsPerBlock>>>(D_CLUSTERS, D_NUM_CLASSES, k);
     //cuda_update_clusters_kernel_sum<<<BlocksPerGridN, ThreadsPerBlock>>>(D_POINTS, D_CLASSES, D_CLUSTERS, D_NUM_CLASSES, n);
-	cuda_update_clusters_kernel_sum_reduce<<<BlocksPerGridN, ThreadsPerBlock, sizeof(int)*ThreadsPerBlock*k+sizeof(float)*ThreadsPerBlock*k*2>>>(D_POINTS, D_CLASSES, D_CLUSTERS, D_NUM_CLASSES, n, k);
+    cuda_update_clusters_kernel_sum_reduce<<<BlocksPerGridN, ThreadsPerBlock, sizeof(int)*ThreadsPerBlock+sizeof(float)*ThreadsPerBlock*2>>>(D_POINTS, D_CLASSES, D_CLUSTERS, D_NUM_CLASSES, n, k);
     cuda_update_clusters_kernel_divide<<<BlocksPerGridK, ThreadsPerBlock>>>(D_CLUSTERS, D_NUM_CLASSES, k);
-	
-	// copy result to host
+    
+    // copy result to host
     if(sync){
         err = 1;
         err &= (cuerr = cudaMemcpy(CLUSTERS, D_CLUSTERS, S_CLUSTERS, cudaMemcpyDeviceToHost)) == cudaSuccess;
@@ -395,7 +388,7 @@ __global__ void cuda_clean_clusters_kernel(float *d_clusters,
                                            int *d_num_classes,
                                            int k){
     int i;
-	i = blockDim.x * blockIdx.x + threadIdx.x;
+    i = blockDim.x * blockIdx.x + threadIdx.x;
     if(i<k){
         if(d_num_classes[i]==0){
             d_clusters[i*2] = d_old_clusters[i*2];
@@ -408,8 +401,8 @@ __global__ void cuda_clean_clusters_kernel(float *d_clusters,
 }
 
 void cuda_clean_clusters(int n, int *K=NULL, int sync=1){ // use old positions for empty clusters 
-	cudaError_t cuerr = cudaSuccess; // use with cudaGetErrorString(cuerr);
-	int err;
+    cudaError_t cuerr = cudaSuccess; // use with cudaGetErrorString(cuerr);
+    int err;
     
     // copy data to device
     if(sync){
@@ -425,8 +418,8 @@ void cuda_clean_clusters(int n, int *K=NULL, int sync=1){ // use old positions f
     }
     
     cuda_clean_clusters_kernel<<<BlocksPerGridK, ThreadsPerBlock>>>(D_CLUSTERS, D_OLD_CLUSTERS, D_NUM_CLASSES, *K);
-	
-	// copy result to host
+    
+    // copy result to host
     if(sync){
         err = 1;
         err &= (cuerr = cudaMemcpy(CLUSTERS, D_CLUSTERS, S_CLUSTERS, cudaMemcpyDeviceToHost)) == cudaSuccess;
@@ -494,14 +487,14 @@ void init(int n, int k, char *input, int updateClasses){ // malloc and read poin
 }
 
 void cuda_init(int n, int k){ // malloc and copy data to device
-	cudaError_t cuerr = cudaSuccess; // use with cudaGetErrorString(cuerr);
-	int noerr = 1;
-	// malloc
-	noerr &= (cuerr = cudaMalloc((void **)&D_POINTS, S_POINTS)) == cudaSuccess;
-	//printf("err code %s\n", cudaGetErrorString(cuerr));
-	noerr &= (cuerr = cudaMalloc((void **)&D_CLASSES, S_CLASSES)) == cudaSuccess;
-	noerr &= (cuerr = cudaMalloc((void **)&D_NUM_CLASSES, S_NUM_CLASSES)) == cudaSuccess;
-	noerr &= (cuerr = cudaMalloc((void **)&D_CLUSTERS, S_CLUSTERS)) == cudaSuccess;
+    cudaError_t cuerr = cudaSuccess; // use with cudaGetErrorString(cuerr);
+    int noerr = 1;
+    // malloc
+    noerr &= (cuerr = cudaMalloc((void **)&D_POINTS, S_POINTS)) == cudaSuccess;
+    //printf("err code %s\n", cudaGetErrorString(cuerr));
+    noerr &= (cuerr = cudaMalloc((void **)&D_CLASSES, S_CLASSES)) == cudaSuccess;
+    noerr &= (cuerr = cudaMalloc((void **)&D_NUM_CLASSES, S_NUM_CLASSES)) == cudaSuccess;
+    noerr &= (cuerr = cudaMalloc((void **)&D_CLUSTERS, S_CLUSTERS)) == cudaSuccess;
     noerr &= (cuerr = cudaMalloc((void **)&D_OLD_CLUSTERS, S_CLUSTERS)) == cudaSuccess;
     
     
@@ -511,34 +504,34 @@ void cuda_init(int n, int k){ // malloc and copy data to device
         fprintf(stderr, "Failed to allocate device vector\n");
         exit(EXIT_FAILURE);
     }
-	
-	// copy data
-	noerr = 1;
-	noerr &= cudaMemcpy(D_POINTS, POINTS, S_POINTS, cudaMemcpyHostToDevice) == cudaSuccess;
-	noerr &= cudaMemcpy(D_CLUSTERS, CLUSTERS, S_CLUSTERS, cudaMemcpyHostToDevice) == cudaSuccess;
-	noerr &= cudaMemcpy(D_OLD_CLUSTERS, D_CLUSTERS, S_CLUSTERS, cudaMemcpyDeviceToDevice) == cudaSuccess;
+    
+    // copy data
+    noerr = 1;
+    noerr &= cudaMemcpy(D_POINTS, POINTS, S_POINTS, cudaMemcpyHostToDevice) == cudaSuccess;
+    noerr &= cudaMemcpy(D_CLUSTERS, CLUSTERS, S_CLUSTERS, cudaMemcpyHostToDevice) == cudaSuccess;
+    noerr &= cudaMemcpy(D_OLD_CLUSTERS, D_CLUSTERS, S_CLUSTERS, cudaMemcpyDeviceToDevice) == cudaSuccess;
     if (!noerr)
     {
         fprintf(stderr, "Failed to copy data from host to device\n");
         exit(EXIT_FAILURE);
     }
-	
-	// blocksPerGrid
-	BlocksPerGridN = (n + ThreadsPerBlock - 1) / ThreadsPerBlock;
-	BlocksPerGridK = (k + ThreadsPerBlock - 1) / ThreadsPerBlock;
-	printf("Using %d blocks of %d threads\n", BlocksPerGridN, ThreadsPerBlock);
-	
+    
+    // blocksPerGrid
+    BlocksPerGridN = (n + ThreadsPerBlock - 1) / ThreadsPerBlock;
+    BlocksPerGridK = (k + ThreadsPerBlock - 1) / ThreadsPerBlock;
+    printf("Using %d blocks of %d threads\n", BlocksPerGridN, ThreadsPerBlock);
+    
     // update classes
     cuda_update_classes(n, k);
     cuda_count_classes(n, k);
 }
 
 void cuda_toHost(int n, int k){
-	cudaError_t cuerr = cudaSuccess; // use with cudaGetErrorString(cuerr);
-	int noerr = 1;
+    cudaError_t cuerr = cudaSuccess; // use with cudaGetErrorString(cuerr);
+    int noerr = 1;
     noerr = 1;
-	noerr &= (cuerr = cudaMemcpy(CLUSTERS, D_CLUSTERS, S_CLUSTERS, cudaMemcpyDeviceToHost)) == cudaSuccess;
-	noerr &= (cuerr = cudaMemcpy(CLASSES, D_CLASSES, S_CLASSES, cudaMemcpyDeviceToHost)) == cudaSuccess;
+    noerr &= (cuerr = cudaMemcpy(CLUSTERS, D_CLUSTERS, S_CLUSTERS, cudaMemcpyDeviceToHost)) == cudaSuccess;
+    noerr &= (cuerr = cudaMemcpy(CLASSES, D_CLASSES, S_CLASSES, cudaMemcpyDeviceToHost)) == cudaSuccess;
     if (!noerr)
     {
         fprintf(stderr, "Failed to copy data from host to device\n");
@@ -569,8 +562,8 @@ int cmd_parser(int argc, char **argv, int *n, int *k, int *t, char *input){
                    "    T: max iterations for the kmeans algorithm\n"
                    "    Input: should be n lines, two floats in each line and split by ','\n"
                    "    -g: Use GPU, otherwise, use CPU only.\n"
-				   "    -s: synchronize after each step (for debug).\n"
-		           "    Results will be in Classes.txt and Clusters.txt\n";
+                   "    -s: synchronize after each step (for debug).\n"
+                   "    Results will be in Classes.txt and Clusters.txt\n";
     invalid = 0;
     valid = 0;
     if(argc==1){
@@ -613,7 +606,7 @@ int cmd_parser(int argc, char **argv, int *n, int *k, int *t, char *input){
                 ;
         }
     }
-	
+    
     if(valid && *n==-1){
         *n = data_count(input);
     }
@@ -635,7 +628,7 @@ int cmd_parser(int argc, char **argv, int *n, int *k, int *t, char *input){
     //printf("option T: %d\n", *t);
     //printf("option Input: %s\n", input);
     //printf("invalid %d\n", invalid);
-	
+    
     return invalid;    
 }
 
@@ -661,20 +654,20 @@ int main(int argc, char **argv) {
         
         if(USEGPU){
             cuda_clean_clusters(N, &K, SYNC);
-		    cuda_update_classes(N, K, SYNC);
+            cuda_update_classes(N, K, SYNC);
             cuda_update_clusters(N, K, SYNC);
         }else{   
             clean_clusters(N, &K);
-	        update_classes(N, K);
+            update_classes(N, K);
             update_clusters(N, K);
         }
-		if(SYNC){
-			printf("NUM CLASSES ");
-			for(int i=0;i<K;i++){
-				printf("%d, ",NUM_CLASSES[i]);
-			}
-			printf("\n");
-		}
+        if(SYNC){
+            printf("NUM CLASSES ");
+            for(int i=0;i<K;i++){
+                printf("%d, ",NUM_CLASSES[i]);
+            }
+            printf("\n");
+        }
     }
     cudaEventRecord(stop, 0);
     cudaEventSynchronize( stop );
@@ -685,7 +678,7 @@ int main(int argc, char **argv) {
     if(USEGPU){
         cuda_toHost(N, K);
     }
-	
+    
     write_results(N, K);
     return 0;
 }
