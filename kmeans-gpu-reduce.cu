@@ -297,10 +297,10 @@ __global__ void cuda_update_clusters_kernel_sum_reduce(const float *d_points,
                 __syncthreads();
             }
 			if(tid==0){
-				d_num_classes[cluster] += shared_num_classes[0];
-				d_clusters[cluster*2] += shared_clusters_x[0];
-				d_clusters[cluster*2+1]+=shared_clusters_y[0];
-			} 
+				atomicAdd(&d_num_classes[cluster],shared_num_classes[0]);
+				atomicAdd(&d_clusters[cluster*2],shared_clusters_x[0]);
+				atomicAdd(&d_clusters[cluster*2+1],shared_clusters_y[0]);
+			}      
 		}
 	}
     
